@@ -1,0 +1,16 @@
+../Core/Src/main.c:95:5:main	1
+../Core/Src/main.c:207:6:SystemClock_Config	4
+../Core/Src/main.c:251:13:MX_SPI1_Init	2
+../Core/Src/main.c:291:13:MX_USART1_UART_Init	2
+../Core/Src/main.c:324:13:MX_DMA_Init	1
+../Core/Src/main.c:345:13:MX_GPIO_Init	1
+../Core/Src/main.c:365:1:__io_putchar	1
+../Core/Src/main.c:371:6:HAL_SPI_TxRxCpltCallback	2
+../Core/Src/main.c:380:6:HAL_SPI_ErrorCallback	2
+../Core/Src/main.c:389:6:HAL_UARTEx_RxEventCallback	2
+../Core/Src/main.c:397:6:HAL_UART_TxCpltCallback	2
+../Core/Src/main.c:405:6:HAL_UART_ErrorCallback	2
+../Core/Src/main.c:423:6:StartDefaultTask	1
+../Core/Src/main.c:441:6:spi_handle_function	14
+../Core/Src/main.c:566:6:usart_handle_function	9
+../Core/Src/main.c:671:6:Error_Handler	1
