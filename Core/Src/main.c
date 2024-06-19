@@ -443,11 +443,14 @@ void spi_handle_function(void const * argument)
   /* USER CODE BEGIN spi_handle_function */
   uint8_t * byte;								// указатель на текущий элемент приёмного буфера
   uint8_t  *rx_buffer = malloc(BUNDLE_SIZE);	// указатель на временно аллоцирумую память приёмного буфера
+  assert(rx_buffer);						    // такого происходить не должно и должно вылавливаться на стадии дебага
   uint8_t  rx_buffer_itt = 0;					// итератор приёмного буфера
 
   uint8_t * tx_buffer;							// указатель на буфер передачи
 
   bool transmission = false;					// флаг о необходимости помещения временного буфера в очередь
+
+  bool full_frame_received_from_uart = true;
 
   /*!
    *  Составление сета из блокировки на очереди и семафоре/мютексе конца передачи по SPI
@@ -471,6 +474,18 @@ void spi_handle_function(void const * argument)
 		  if (osEventMessage == event.status)
 		  {
 			  tx_buffer = event.value.p;
+
+			  full_frame_received_from_uart = true;
+
+			  if (NULL == tx_buffer[tx_buffer[0]])
+			  {
+				  //проверка, хранится ли в буффере frame полного размера или frame разбит на части
+				  full_frame_received_from_uart = false;
+			  }
+			  else
+			  {
+				  full_frame_received_from_uart = true;
+			  }
 			  HAL_SPI_TransmitReceive_DMA(&hspi1, &tx_buffer[1], &tx_buffer[1], tx_buffer[0]);
 		  }
 
@@ -520,11 +535,14 @@ void spi_handle_function(void const * argument)
 
 			  /*!
 			   *  взводим новый сеанс приемопередачи по прерыванию если фрейм ещё не получен.
+			   * если полный фрейм не получен от UART , то вычитка SPI Slave не производится,
+			   * чтобы не нарушать нуль терминированный протокол
+			   * В этом случае продолжается ожидание остальной части пакета от UART
 			   */
-			  if(rx_buffer_itt)
+			  if ((full_frame_received_from_uart) && (rx_buffer_itt))
 			  {
-				  byte = &rx_buffer[++rx_buffer_itt];
-				  HAL_SPI_TransmitReceive_IT(&hspi1,byte, byte, 1);
+					byte = &rx_buffer[++rx_buffer_itt];
+					HAL_SPI_TransmitReceive_IT(&hspi1,byte, byte, 1);
 			  }
 		  }
 
@@ -539,6 +557,11 @@ void spi_handle_function(void const * argument)
 			  }
 
 			  rx_buffer = malloc(BUNDLE_SIZE); // аллоцируем новый приемный буфер
+			  if(!rx_buffer)
+			  {
+				  puts("Your heap is too small");
+				  assert(0); // здесь можно упасть в бесконечный цикл, упасть в HF и сделать backtrace, сохранив его в память.
+			  }
 		  }
 
       } else
@@ -548,9 +571,15 @@ void spi_handle_function(void const * argument)
 		   *  который возникнет если не будет новой посылки по UART
 		   *  Данный метод нужен изза того, что устройство SPI slave можете передавать асинхронно.
 		   *  Время реакции на событие SPI Slave равно времени таймаута + накладные издержки времени.
+		   *  если полный фрейм не получен от UART , то вычитка SPI Slave не производится,
+		   *  чтобы не нарушать нуль терминированный протокол
+		   *  В этом случае продолжается ожидание остальной части пакета от UART
 		   */
-    	  byte = &rx_buffer[++rx_buffer_itt];
-    	  HAL_SPI_TransmitReceive_IT(&hspi1,byte, byte, 1);
+		  if (full_frame_received_from_uart)
+		  {
+	    	  byte = &rx_buffer[++rx_buffer_itt];
+	    	  HAL_SPI_TransmitReceive_IT(&hspi1,byte, byte, 1);
+		  }
       }
   }
   /* USER CODE END spi_handle_function */
@@ -654,6 +683,11 @@ void usart_handle_function(void const * argument)
 			 *  аллоцируем новый буфер.
 			*/
 			rx_buffer = malloc(BUNDLE_SIZE);
+			if(!rx_buffer)
+			{
+				puts("Your heap is too small");
+				assert(0); // здесь можно упасть в бесконечный цикл, упасть в HF и сделать backtrace, сохранив его куда то.
+			}
 			buffer_itt = 0;
 			transmission = false;
 		}

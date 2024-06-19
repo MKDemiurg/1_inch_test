@@ -11,6 +11,6 @@
 ../Core/Src/main.c:397:6:HAL_UART_TxCpltCallback	2
 ../Core/Src/main.c:405:6:HAL_UART_ErrorCallback	2
 ../Core/Src/main.c:423:6:StartDefaultTask	1
-../Core/Src/main.c:441:6:spi_handle_function	14
-../Core/Src/main.c:566:6:usart_handle_function	9
-../Core/Src/main.c:671:6:Error_Handler	1
+../Core/Src/main.c:441:6:spi_handle_function	17
+../Core/Src/main.c:595:6:usart_handle_function	9
+../Core/Src/main.c:705:6:Error_Handler	1
